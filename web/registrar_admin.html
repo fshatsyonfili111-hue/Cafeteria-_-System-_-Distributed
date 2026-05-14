@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@zxing/library@0.19.1"></script>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <div style="text-align:center; margin: 30px 0;">
+        <nav class="navbar-pill">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="registrar_admin.html" class="nav-link active"><i class="fas fa-user-plus"></i> Registration</a>
+            <a href="RegistrarDashboard" class="nav-link"><i class="fas fa-users"></i> View Students</a>
+            <a href="index.html" class="nav-link" style="background: rgba(255,0,0,0.15); border-radius: 40px; margin-left: 10px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Registration Panel -->
+    <div class="glass-panel" style="width: 500px; margin: 20px auto;">
+        <h1 style="text-align:center; color:#48cae4;">Register Student</h1>
+        
+        <!-- Scanner Area -->
+        <div style="text-align:center;">
+            <video id="video" style="width:300px; border-radius:10px; background:black; margin-bottom:10px;"></video>
+            <p id="status" style="color: #8892b0;">Scan QR Code to Auto-Fill...</p>
+        </div>
+
+        <form id="regForm" enctype="multipart/form-data">
+            <label>ID Card:</label> <input type="text" name="id" id="id" required>
+            <label>First Name:</label> <input type="text" name="firstName" id="firstName" required>
+            <label>Last Name:</label> <input type="text" name="lastName" id="lastName" required>
+            <label>Age:</label> <input type="number" name="age">
+            <label>Gender:</label> <input type="text" name="gender">
+            <label>Department:</label> <input type="text" name="department" id="department">
+            <label>Faculty:</label> <input type="text" name="faculty">
+            <label>Year:</label> <input type="number" name="year">
+            <label>Admission Date:</label> <input type="date" name="admissionDate">
+            <label>Birth Date:</label> <input type="date" name="birthDate">
+            <label>Upload Photo:</label> 
+            <input type="file" name="photo" accept="image/*" onchange="previewFile(event)" required>
+            <img id="photoPreview" style="width:100px; border-radius:10px; display:none; margin:10px 0;">
+            
+            <button type="button" class="btn" onclick="submitFullRegistration()">Register Student</button>
+        </form>
+    </div>
+
+    <script>
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        let isScanning = true;
+
+        // Start Camera
+        codeReader.decodeFromVideoDevice(undefined, 'video', (result) => {
+            if (result && isScanning) {
+                isScanning = false; // Lock to prevent rapid fire
+                parseAndFill(result.getText());
+                document.getElementById('status').innerText = "Data Extracted! Verify details.";
+                new Audio('success.mp3').play().catch(()=>{});
+            }
+        }).catch(err => console.log(err));
+
+        // Preview Image
+        function previewFile(event) {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let output = document.getElementById('photoPreview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Auto-Fill Form
+        function parseAndFill(raw) {
+    try {
+        // 1. Extract ID
+        let id = raw.split("UniqueCode")[1].split(",")[0].trim();
+        document.getElementById('id').value = id;
+
+        // 2. Extract Name (Elias Shumuye Tewele)
+        let nameRaw = raw.split("Name:")[1].split(",")[0].trim();
+        let nameParts = nameRaw.split(" ");
+        document.getElementById('firstName').value = nameParts[0]; // Elias
+        document.getElementById('lastName').value = nameParts.slice(1).join(" "); // Shumuye Tewele
+
+        // 3. Extract Department
+        // The structure has Name, then Program, then Department
+        let dept = raw.split(",")[3].trim(); 
+        document.getElementById('department').value = dept;
+
+        // 4. Helper to format DD-M-YYYY to YYYY-MM-DD
+        const formatDate = (dateStr) => {
+            let parts = dateStr.trim().split('-'); // [DD, M, YYYY]
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        };
+
+        // 5. Extract Admission Date (AdmissionDate: 25-3-2016)
+        let admDateRaw = raw.split("AdmissionDate:")[1].split(" ")[1].split(",")[0].trim();
+        document.getElementById('admissionDate').value = formatDate(admDateRaw);
+
+        // 6. Extract Birth Date (BirthDate: 11-5-1994)
+        let birthDateRaw = raw.split("BirthDate:")[1].trim();
+        document.getElementById('birthDate').value = formatDate(birthDateRaw);
+
+        document.getElementById('status').innerText = "Data Extracted Successfully!";
+    } catch (e) {
+        console.error("Parsing error:", e);
+        document.getElementById('status').innerText = "Error: QR Format not recognized.";
+    }
+}
+
+        // Submit form via Ajax/Fetch
+        function submitFullRegistration() {
+    let form = document.getElementById('regForm');
+    let formData = new FormData(form);
+
+    fetch('RegistrarServlet', {
+        method: 'POST',
+        body: formData 
+    })
+    .then(res => res.text())
+    .then(data => {
+        if(data === "SUCCESS") {
+            alert("Registration Complete!");
+            location.reload(); // This will refresh the page properly
+        } else {
+            alert(data); // Shows errors from the server
+        }
+    })
+    .catch(err => alert("Error: " + err));
+}
+    </script>
+</body>
+</html>

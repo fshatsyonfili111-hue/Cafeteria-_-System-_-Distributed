@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital ID Card | Aksum University</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        
+        :root {
+            --aku-blue: #06142E;
+            --aku-gold: #BD83B8;
+            --aku-orange: #F1916D;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Outfit', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .id-card {
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            background: var(--aku-blue);
+            height: 140px;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .card-header span {
+            color: var(--aku-gold);
+        }
+
+        .photo-container {
+            width: 160px;
+            height: 160px;
+            background: white;
+            border-radius: 25px;
+            margin: -80px auto 20px;
+            position: relative;
+            z-index: 2;
+            padding: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        #studentPhoto {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            text-align: center;
+            padding: 20px 40px;
+        }
+
+        .student-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--aku-blue);
+            margin: 0;
+        }
+
+        .student-dept {
+            color: var(--aku-gold);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .info-grid {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .info-item span {
+            font-weight: 700;
+            color: var(--aku-blue);
+        }
+
+        .qr-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card-footer {
+            background: var(--aku-blue);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .actions {
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-print { background: var(--aku-blue); color: white; }
+        .btn-back { background: #e2e8f0; color: #475569; }
+
+        @media print {
+            .actions { display: none; }
+            body { background: white; padding: 0; }
+            .id-card { box-shadow: none; border: 1px solid #eee; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="id-card" id="cardArea">
+        <div class="card-header">
+            <h2>AKSUM <span>UNIVERSITY</span></h2>
+            <p style="font-size: 0.7rem; opacity: 0.8; margin-top: 5px;">OFFICIAL DIGITAL IDENTITY</p>
+        </div>
+
+        <div class="photo-container">
+            <img id="studentPhoto" src="images/default.jpg">
+        </div>
+
+        <div class="card-body">
+            <h1 class="student-name" id="nameText">Loading...</h1>
+            <p class="student-dept" id="deptText">Department</p>
+
+            <div style="margin-top: 15px; padding: 10px; background: rgba(189, 131, 184, 0.1); border-radius: 12px;">
+                <label style="font-size: 0.65rem; color: var(--aku-gold); text-transform: uppercase; font-weight: 800; display: block;">Official ID Number</label>
+                <span id="idText" style="font-size: 1.4rem; font-weight: 800; color: var(--aku-blue);">ID-00000</span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Valid Thru</label>
+                    <span>2028/29</span>
+                </div>
+                <div class="info-item">
+                    <label>Status</label>
+                    <span style="color: #10b981;">Active</span>
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <div id="qrcode"></div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            VERIFIED BY AKSUM UNIVERSITY PORTAL
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="#" onclick="window.history.back()" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <button onclick="window.print()" class="btn btn-print">
+            <i class="fas fa-print"></i> Print / Download
+        </button>
+    </div>
+
+    <script>
+        const studentId = new URLSearchParams(window.location.search).get('id');
+        
+        fetch('api/student-info?id=' + studentId)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('nameText').innerText = data.name;
+            document.getElementById('deptText').innerText = data.dept || "GENERAL SCIENCE";
+            document.getElementById('idText').innerText = data.id;
+            if(data.photo) document.getElementById('studentPhoto').src = data.photo;
+            
+            new QRCode(document.getElementById("qrcode"), {
+                text: studentId,
+                width: 100,
+                height: 100,
+                colorDark : "#06142E",
+                colorLight : "#f8fafc",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+    </script>
+</body>
+</html>

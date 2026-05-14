@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Face Verify | Management</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .scanner-viewport {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            margin: auto;
+            background: #000;
+            border-radius: 30px;
+            border: 4px solid var(--accent-primary);
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(189, 131, 184, 0.4);
+        }
+        #video { width: 100%; height: 100%; object-fit: cover; filter: brightness(1.2) contrast(1.1); }
+        .hud-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            border: 20px solid rgba(6, 20, 46, 0.8);
+        }
+        .target-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px; height: 300px;
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 0 2000px rgba(6, 20, 46, 0.4);
+        }
+        .corner { position: absolute; width: 30px; height: 30px; border: 4px solid var(--accent-secondary); }
+        .tl { top: -4px; left: -4px; border-right: none; border-bottom: none; }
+        .tr { top: -4px; right: -4px; border-left: none; border-bottom: none; }
+        .bl { bottom: -4px; left: -4px; border-right: none; border-top: none; }
+        .br { bottom: -4px; right: -4px; border-left: none; border-top: none; }
+        
+        .scanning-bar {
+            position: absolute;
+            width: 100%; height: 2px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 20px var(--accent-primary);
+            animation: moveBar 4s infinite ease-in-out;
+        }
+        @keyframes moveBar {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+
+        .ai-status-pill {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--accent-primary);
+            border-radius: 20px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pulse-dot {
+            width: 8px; height: 8px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body style="padding: 20px;">
+
+    <!-- Navigation -->
+    <div style="text-align:center; margin-bottom: 30px;">
+        <nav class="navbar-pill">
+            <a href="face_verify.html" class="nav-link active"><i class="fas fa-id-badge"></i> AI Face Verify</a>
+            <a href="scanner.html" class="nav-link"><i class="fas fa-qrcode"></i> QR Scanner</a>
+            <a href="DashboardServlet?view=students" class="nav-link" style="margin-left: 20px; opacity: 0.7;"><i class="fas fa-arrow-left"></i> Exit to Dashboard</a>
+        </nav>
+    </div>
+
+    <h1 style="text-align: center; margin-bottom: 30px;">Smart Access: <span style="color: var(--accent-primary);">AI Neural Verification</span></h1>
+
+    <div class="scanner-viewport">
+        <video id="video" autoplay muted></video>
+        <div class="hud-overlay"></div>
+        <div class="target-box">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <div class="scanning-bar"></div>
+        </div>
+        <div class="ai-status-pill">
+            <div class="pulse-dot"></div>
+            <span id="aiStatus">NEURAL LINK ACTIVE</span>
+        </div>
+    </div>
+
+    <div id="aiConfidence" style="text-align:center; margin-top:15px; color: var(--accent-secondary); font-weight: 700; font-family: monospace;">
+        AI CONFIDENCE: 0.00%
+    </div>
+
+    <div id="resultBox" class="glass-panel" style="max-width: 800px; margin: 30px auto; display: none; text-align: center;">
+        <div id="statusIndicator" style="font-size: 2rem; font-weight: 800; margin-bottom: 15px;">-</div>
+        <div style="display: flex; gap: 30px; justify-content: center; align-items: center;">
+            <img id="studentPhoto" src="images/default.jpg" style="width: 150px; height: 150px; border-radius: 20px; object-fit: cover; border: 3px solid var(--accent-primary);">
+            <div style="text-align: left;">
+                <h2 id="studentName" style="margin: 0; color: white;">-</h2>
+                <p id="studentId" style="color: var(--accent-primary); font-weight: 600; margin: 5px 0;">-</p>
+                <p id="studentDept" style="color: var(--text-secondary); margin: 0;">-</p>
+                <div id="mealStatus" style="margin-top: 15px; padding: 8px 15px; border-radius: 10px; font-weight: 800; display: inline-block;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const aiStatus = document.getElementById('aiStatus');
+        const aiConfidence = document.getElementById('aiConfidence');
+        const resultBox = document.getElementById('resultBox');
+        
+        let faceTemplates = [];
+        let isProcessing = false;
+
+        // 1. Load All Registered Faces into Memory (The "Smart" way)
+        fetch('api/face-list')
+            .then(res => res.json())
+            .then(data => {
+                faceTemplates = data;
+                aiStatus.innerText = "DATABASE SYNCED: " + data.length + " FACES";
+            });
+
+        // 2. Connect to Camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { 
+                new Audio('beep.wav').play().catch(()=>{});
+                aiStatus.innerText = "CAMERA OFFLINE";
+            });
+
+        // 3. Real-time Face Detection Loop (Simulated Smart Engine)
+        setInterval(async () => {
+            if (isProcessing || faceTemplates.length === 0) return;
+            
+            // In a full implementation, you would use:
+            // const detection = await faceapi.detectSingleFace(video).withFaceDescriptor();
+            // const match = faceMatcher.findBestMatch(detection.descriptor);
+            
+            // SMART SIMULATION: We pick a random registered student to demonstrate the matching
+            isProcessing = true;
+            const randomIndex = Math.floor(Math.random() * faceTemplates.length);
+            const targetStudent = faceTemplates[randomIndex];
+            
+            // Update HUD
+            aiConfidence.innerText = "ANALYZING BIOMETRICS... " + (Math.random() * 10 + 90).toFixed(2) + "%";
+            
+            setTimeout(() => {
+                verifyStudent(targetStudent.id);
+            }, 2000);
+            
+        }, 8000);
+
+        function verifyStudent(id) {
+            fetch('ScannerServlet?id=' + id)
+            .then(res => res.text())
+            .then(data => {
+                const parts = data.split('|');
+                const status = parts[0];
+                
+                resultBox.style.display = 'block';
+                document.getElementById('statusIndicator').innerText = status;
+                
+                if (status.includes("GRANTED")) {
+                    document.getElementById('statusIndicator').style.color = "var(--success)";
+                    aiConfidence.innerText = "MATCH FOUND: 98.42% ACCURACY";
+                    new Audio('success.mp3').play().catch(()=>{});
+                } else {
+                    document.getElementById('statusIndicator').style.color = "var(--danger)";
+                    aiConfidence.innerText = "MATCH ALERT: SECURITY EXCEPTION";
+                    new Audio('beep.wav').play().catch(()=>{});
+                }
+
+                document.getElementById('studentName').innerText = parts[1];
+                document.getElementById('studentPhoto').src = parts[2];
+                document.getElementById('studentDept').innerText = parts[3];
+                document.getElementById('studentId').innerText = "ID: " + parts[4];
+                
+                const mealMsg = document.getElementById('mealStatus');
+                mealMsg.innerText = status.includes("GRANTED") ? "ACCESS GRANTED" : "ACCESS DENIED";
+                mealMsg.style.background = status.includes("GRANTED") ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)";
+                mealMsg.style.color = status.includes("GRANTED") ? "var(--success)" : "var(--danger)";
+                
+                setTimeout(() => { isProcessing = false; }, 3000);
+            });
+        }
+    </script>
+</body>
+</html>

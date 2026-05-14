@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Portal | Aksum University</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="logo-section">
+                <h1 style="margin:0; font-size: 1.5rem; letter-spacing: 2px;">AKU PORTAL</h1>
+                <p id="welcomeMsg" style="margin:0; font-size: 0.9rem; color: var(--accent-primary);">Welcome, Student</p>
+            </div>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <div style="text-align:right;">
+                    <div id="studentRolePill" style="font-size:0.7rem; background:var(--accent-primary); padding:2px 8px; border-radius:10px; color:black; font-weight:800;">LOADING...</div>
+                    <div id="studentStatusPill" style="font-size:0.7rem; color:var(--success); font-weight:800; margin-top:3px;">ACTIVE</div>
+                </div>
+                <img id="profileImg" src="images/default.jpg" style="width: 50px; height: 50px; border-radius: 15px; object-fit: cover; border: 2px solid var(--accent-primary); box-shadow: 0 0 15px rgba(195, 142, 180, 0.3);">
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Pill (Split Style) -->
+    <div style="text-align:center; margin: 40px 0;">
+        <nav class="navbar-pill">
+            <a href="#" class="nav-link active" onclick="showSection('announcements', this)">
+                <i class="fas fa-bullhorn"></i> Announcements
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('menu', this)">
+                <i class="fas fa-utensils"></i> Menu Schedule
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('history', this)">
+                <i class="fas fa-history"></i> My Meal History
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('feedback', this)">
+                <i class="fas fa-comment-dots"></i> Feedback
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('settings', this)">
+                <i class="fas fa-user-cog"></i> Profile
+            </a>
+            <a id="viewIdLink" class="nav-link">
+                <i class="fas fa-id-card"></i> Digital ID
+            </a>
+            <a href="index.html" class="nav-link" style="background: rgba(255,0,0,0.15); border-radius: 40px; margin-left: 10px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </nav>
+    </div>
+
+    <main style="max-width: 1200px; margin: auto; padding: 20px;">
+        
+        <!-- Section: Announcements -->
+        <div id="section-announcements" class="portal-section">
+            <h2 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-bullhorn"></i> Latest Announcements</h2>
+            <div id="messageContainer" class="animate-up"></div>
+        </div>
+
+        <!-- Section: Menu -->
+        <div id="section-menu" class="portal-section" style="display:none;">
+            <h2 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-calendar-alt"></i> This Week's Menu</h2>
+            <div id="weeklyMenu" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px;"></div>
+        </div>
+
+        <!-- Section: Meal History -->
+        <div id="section-history" class="portal-section" style="display:none;">
+            <h2 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-history"></i> Your Recent Meals</h2>
+            <div class="glass-panel animate-up" style="max-width: 800px; margin: auto;">
+                <table class="modern-table">
+                    <thead><tr><th>Meal Type</th><th>Date Consumed</th></tr></thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="2" style="text-align:center;">Loading history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Feedback -->
+        <div id="section-feedback" class="portal-section" style="display:none;">
+            <div class="glass-panel animate-up" style="max-width: 500px; margin: auto;">
+                <h2 style="text-align:center;"><i class="fas fa-comment-dots"></i> Meal Feedback</h2>
+                <form action="FeedbackServlet" method="POST">
+                    <input type="hidden" name="id" id="feedbackId">
+                    <label>Meal Type:</label>
+                    <select name="mealType"><option>Breakfast</option><option>Lunch</option><option>Dinner</option></select>
+                    <label>Rating:</label>
+                    <select name="rating"><option value="5">5 Stars - Excellent</option><option value="4">4 Stars - Good</option><option value="3">3 Stars - Average</option><option value="2">2 Stars - Poor</option><option value="1">1 Star - Terrible</option></select>
+                    <label>Comments:</label>
+                    <textarea name="comment" rows="4" placeholder="Tell us about the meal quality..." required></textarea>
+                    <button type="submit" class="btn" style="width:100%; margin-top:20px;">Submit Feedback</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Section: Settings -->
+        <div id="section-settings" class="portal-section" style="display:none;">
+            <div style="display:flex; gap:30px; justify-content:center; flex-wrap:wrap;">
+                <div class="glass-panel animate-up" style="width:400px; text-align:center;">
+                    <h3>Update Profile Photo</h3>
+                    <img id="profileImgBig" src="images/default.jpg" style="width:150px; height:150px; border-radius:50%; object-fit:cover; margin:20px auto; border:4px solid var(--accent-primary);">
+                    <form action="StudentProfileServlet" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="updatePhoto">
+                        <input type="hidden" name="id" id="settingsIdPhoto">
+                        <input type="file" name="photo" accept="image/*" required style="margin-bottom:20px;">
+                        <button type="submit" class="btn" style="width:100%;">Upload New Photo</button>
+                    </form>
+                </div>
+                <div class="glass-panel animate-up" style="width:400px;">
+                    <h3>Change Password</h3>
+                    <form action="StudentProfileServlet" method="POST">
+                        <input type="hidden" name="action" value="updatePassword">
+                        <input type="hidden" name="id" id="settingsIdPass">
+                        <label>Current Password:</label><input type="password" name="oldPassword" required>
+                        <label>New Password:</label><input type="password" name="newPassword" required>
+                        <label>Confirm Password:</label><input type="password" name="confirmPassword" required>
+                        <button type="submit" class="btn" style="width:100%; margin-top:20px;">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content"><div class="footer-section"><h3>AKU PORTAL</h3><p>Excellence in Campus Life.</p></div></div>
+        <div class="footer-bottom">&copy; 2026 Aksum University.</div>
+    </footer>
+
+    <script>
+        const studentId = new URLSearchParams(window.location.search).get('id');
+        
+        if (studentId) {
+            document.getElementById('viewIdLink').href = "print_id.html?id=" + studentId;
+            document.getElementById('feedbackId').value = studentId;
+            document.getElementById('settingsIdPhoto').value = studentId;
+            document.getElementById('settingsIdPass').value = studentId;
+        } else {
+            window.location.href = "login.html";
+        }
+
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.portal-section').forEach(s => s.style.display = 'none');
+            document.getElementById('section-' + sectionId).style.display = 'block';
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            element.classList.add('active');
+            if(sectionId === 'history') loadHistory();
+        }
+      
+        window.onload = function() {
+            if(!studentId) return;
+
+            // Profile Data
+            fetch('api/student-info?id=' + studentId)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('welcomeMsg').innerText = "Hello, " + data.name;
+                document.getElementById('studentRolePill').innerText = data.type.toUpperCase() + " ELIGIBLE";
+                document.getElementById('studentStatusPill').innerText = data.status.toUpperCase();
+                document.getElementById('studentStatusPill').style.color = data.status === "Active" ? "var(--success)" : "var(--danger)";
+                if(data.photo) {
+                    document.getElementById('profileImg').src = data.photo;
+                    document.getElementById('profileImgBig').src = data.photo;
+                }
+            });
+
+            // Announcements
+            fetch('MessageServlet?action=json&format=json')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('messageContainer');
+                data.forEach(msg => {
+                    container.innerHTML += `
+                        <div class="glass-panel" style="margin-bottom:20px;">
+                            <h3 style="color:var(--accent-primary); margin-bottom:10px;">${msg.title}</h3>
+                            <p style="color:var(--text-secondary);">${msg.body}</p>
+                            <small style="color:var(--text-muted); opacity:0.6;">${msg.date}</small>
+                        </div>`;
+                });
+            });
+
+            // Menu
+            fetch('api/menu?scope=all')
+            .then(res => res.json())
+            .then(data => {
+                let container = document.getElementById('weeklyMenu');
+                container.innerHTML = ""; // Clear loader if any
+                data.forEach(item => {
+                    // Extract HH:mm from time string (HH:mm:ss - HH:mm:ss)
+                    let displayTime = item.time.split(' - ').map(t => t.substring(0, 5)).join(' - ');
+                    
+                    container.innerHTML += `
+                        <div class="glass-panel animate-up">
+                            <img src="${item.photo}" style="width:100%; height:160px; object-fit:cover; border-radius:15px; margin-bottom:15px;">
+                            <h3 style="color:var(--accent-primary); margin-bottom: 5px;">${item.day} - ${item.type}</h3>
+                            <div style="font-size: 0.85rem; color: var(--accent-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                <i class="fas fa-clock"></i> ${displayTime}
+                            </div>
+                            <p style="color:var(--text-secondary); font-size:0.9rem; line-height: 1.4;">${item.desc}</p>
+                        </div>`;
+                });
+            });
+        };
+
+        function loadHistory() {
+            fetch('api/meal-history?id=' + studentId)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = data.length ? "" : "<tr><td colspan='2' style='text-align:center;'>No recent meal activity found.</td></tr>";
+                data.forEach(record => {
+                    tbody.innerHTML += `<tr><td>${record.meal}</td><td>${record.date}</td></tr>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>

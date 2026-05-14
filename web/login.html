@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="center-screen">
+    <div class="glass-panel animate-up" style="width: 100%; max-width: 450px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="margin-bottom: 5px;">Welcome Back</h1>
+            <p style="color: var(--text-secondary);">Secure Access to Aksum University Portal</p>
+        </div>
+        
+        <form action="LoginServlet" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">User ID</label>
+                <input type="text" name="id" placeholder="Enter your ID" required>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Password</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Access Role</label> 
+                <select name="role">
+                    <option value="student">Student Portal</option>
+                    <option value="registrar">Registrar Administration</option>
+                    <option value="cafe">Cafeteria Management</option>
+                </select>
+            </div>
+            <button type="submit" class="btn" style="width: 100%; padding: 16px;">Sign In to Portal</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 25px;">
+            <a href="#" onclick="alert('Please visit the Cafeteria Management Office with your ID Card to reset your password.')" style="color: var(--accent-secondary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-key"></i> Forgot Password?
+            </a>
+            <div style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <a href="index.html" style="color: white; text-decoration: none; font-size: 0.9rem; opacity: 0.7;">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

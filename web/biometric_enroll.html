@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biometric Enrollment | Aksum University</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .biometric-box {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 25px;
+            overflow: hidden;
+            border: 4px solid var(--accent-primary);
+            box-shadow: 0 0 30px rgba(189, 131, 184, 0.3);
+        }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .face-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px; height: 320px;
+            border: 2px dashed var(--accent-secondary);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 0 1000px rgba(6, 20, 46, 0.6);
+        }
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
+            animation: scan 3s infinite linear;
+        }
+        @keyframes scan {
+            0% { top: 10%; }
+            100% { top: 90%; }
+        }
+    </style>
+</head>
+<body class="center-screen">
+
+    <div class="glass-panel animate-up" style="width: 100%; max-width: 600px; text-align: center;">
+        <h2 style="margin-bottom: 10px;">Staff: Face Registration</h2>
+        <div id="studentWelcome" style="margin-bottom: 20px; font-weight: 700; color: var(--accent-secondary); font-size: 1.2rem;">
+            Identifying Student...
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 30px;">Enroll the student's biometric data into the secure cafeteria database.</p>
+
+        <div class="biometric-box" style="margin: 0 auto 30px;">
+            <video id="video" autoplay muted></video>
+            <div class="face-overlay"></div>
+            <div id="scanLine" class="scan-line" style="display: none;"></div>
+        </div>
+
+        <div id="statusMsg" style="margin-bottom: 25px; font-weight: 600; color: var(--accent-primary);">
+            Initializing staff scanner...
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="startEnrollment()" class="btn" id="enrollBtn">
+                <i class="fas fa-fingerprint"></i> Capture & Enroll Student
+            </button>
+            <a href="DashboardServlet?view=students" class="btn" style="background: rgba(255,255,255,0.1); color: white !important;">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const statusMsg = document.getElementById('statusMsg');
+        const welcome = document.getElementById('studentWelcome');
+        const scanLine = document.getElementById('scanLine');
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id');
+
+        // Fetch Student Name
+        if (studentId) {
+            fetch('api/student-info?id=' + studentId)
+            .then(res => res.json())
+            .then(data => {
+                welcome.innerText = "Registering: " + data.name;
+                statusMsg.innerText = "Scanner ready for student.";
+            })
+            .catch(() => {
+                welcome.innerText = "ID: " + studentId;
+                statusMsg.innerText = "Profile fetch failed. Proceeding with ID only.";
+            });
+        }
+
+        // Access Camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => {
+                statusMsg.innerText = "Camera Access Error. Ensure phone is connected via Irium.";
+                statusMsg.style.color = "var(--danger)";
+            });
+
+        function startEnrollment() {
+            if (!studentId) {
+                alert("Critical Error: Missing student ID.");
+                return;
+            }
+
+            statusMsg.innerText = "Analyzing facial features... Keep still.";
+            statusMsg.style.color = "var(--accent-primary)";
+            scanLine.style.display = 'block';
+            document.getElementById('enrollBtn').disabled = true;
+
+            // Generate a more unique mock descriptor
+            const mockEncoding = "FEAT_" + studentId + "_" + Date.now();
+            
+            setTimeout(() => {
+                // Using URLSearchParams for standard form-encoding
+                const params = new URLSearchParams();
+                params.append('id_card', studentId);
+                params.append('encoding', mockEncoding);
+
+                fetch('FaceRegistrationServlet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
+                })
+                .then(res => res.text())
+                .then(data => {
+                    if (data.trim() === "Success") {
+                        scanLine.style.display = 'none';
+                        statusMsg.innerText = "Biometric Enrollment Successful!";
+                        statusMsg.style.color = "#10b981";
+                        setTimeout(() => { window.location.href = "DashboardServlet?view=students"; }, 2000);
+                    } else {
+                        scanLine.style.display = 'none';
+                        statusMsg.innerText = "Registration Failed: " + data;
+                        statusMsg.style.color = "var(--danger)";
+                        document.getElementById('enrollBtn').disabled = false;
+                    }
+                })
+                .catch(err => {
+                    statusMsg.innerText = "Network Error: " + err.message;
+                    statusMsg.style.color = "var(--danger)";
+                    document.getElementById('enrollBtn').disabled = false;
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

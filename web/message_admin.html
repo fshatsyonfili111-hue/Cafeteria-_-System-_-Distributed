@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Send Notification</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <div style="text-align:center; margin: 30px 0;">
+        <nav class="navbar-pill">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="DashboardServlet?view=students" class="nav-link"><i class="fas fa-user-graduate"></i> Students</a>
+            <a href="DashboardServlet?view=meals" class="nav-link"><i class="fas fa-utensils"></i> Meal Activity</a>
+            <a href="menu_admin.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Menu</a>
+            <a href="MenuManager?action=list" class="nav-link"><i class="fas fa-calendar-alt"></i> Manage Menu</a>
+            <a href="message_admin.html" class="nav-link active"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="MessageManager?action=list" class="nav-link"><i class="fas fa-history"></i> Msg History</a>
+            <a href="DashboardServlet?view=feedback" class="nav-link"><i class="fas fa-comments"></i> Feedback</a>
+            <a href="DashboardServlet?view=reports" class="nav-link"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a href="index.html" class="nav-link" style="background: rgba(255,0,0,0.15); border-radius: 40px; margin-left: 10px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Message Form -->
+    <div class="glass-panel animate-up" style="max-width: 500px; margin: 50px auto;">
+        <h2 style="text-align:center; margin-bottom: 30px;">Broadcast Announcement</h2>
+        
+        <form action="MessageServlet" method="POST">
+            <label>Title:</label> 
+            <input type="text" name="title" required placeholder="e.g. Lunch Time Change">
+            
+            <label>Message Content:</label> 
+            <textarea name="message" required style="width:100%; height:120px; margin-bottom:20px;"></textarea>
+            
+            <button type="submit" class="btn" style="width: 100%;">Send to All Students</button>
+        </form>
+    </div>
+</body>
+</html>
